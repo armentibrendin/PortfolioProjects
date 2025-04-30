@@ -29,14 +29,25 @@ population, CAST (total_cases AS float)/CAST (population AS float)*100 as CasesP
 FROM coviddeaths
 ORDER BY 1,2;
 
--- Countries with the highest infection rates
+-- Countries with the highest infection rates (removed offset 21 and incluced where clauses in this query and below)
 
-SELECT location, max(total_cases) as highestInfectionCount, 
+SELECT location,population, max(total_cases) as highestInfectionCount, 
 MAX(CAST(total_cases AS float)/CAST (population AS float))*100 as casesPercentage
 FROM coviddeaths
+WHERE continent is not null
+and total_cases is not null
 GROUP BY location, population
-ORDER BY casesPercentage desc
-OFFSET 21; -- this is to not show the first 22 records with null values
+ORDER BY casesPercentage desc;
+
+--Same above but with date included
+
+SELECT location,population,date, max(total_cases) as highestInfectionCount, 
+MAX(CAST(total_cases AS float)/CAST (population AS float))*100 as casesPercentage
+FROM coviddeaths
+WHERE continent is not null
+and total_cases is not null
+GROUP BY location, population,date
+ORDER BY casesPercentage desc;
 
 --  Breaking things down by continent
 
@@ -50,6 +61,15 @@ WHERE total_deaths IS NOT NULL --omits records where no deaths were recorded, ca
 AND continent IS NOT NULL --omits continents as "countries"
 GROUP BY continent
 ORDER BY totalDeathCount desc;
+
+-- Showing total deaths per continent
+
+SELECT location, SUM(cast(new_deaths as int)) as TotalDeathCount
+from coviddeaths
+where continent is null
+and location not in ('World', 'European Union', 'International')
+group by location
+order by TotalDeathCount desc;
 
 -- I want to start looking at the data in terms of how to visualize it
 -- Let's get some global statistics
@@ -72,6 +92,7 @@ from coviddeaths
 where continent is not null
 -- group by date
 order by totalCasesPerDay;
+
 
 --joining the two tables
 -- Looking at Total Population vs Vaccinations
